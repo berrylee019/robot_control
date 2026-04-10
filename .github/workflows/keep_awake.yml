@@ -33,7 +33,7 @@ jobs:
 
           # 깨우고 싶은 형님의 앱 URL 리스트
           apps = [
-              "https://robot_control.streamlit.app/"
+              "https://robot-control.streamlit.app/"
           ]
 
           chrome_options = Options()

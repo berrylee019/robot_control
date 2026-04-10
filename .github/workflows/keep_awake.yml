@@ -1,0 +1,57 @@
+name: Wake Up Streamlit Apps
+
+on:
+  schedule:
+    # 6시간마다 한 번씩 실행 (너무 자주 하면 GitHub 계정이 정지될 수 있으니 적당히!)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # 수동으로도 실행 가능하게 설정
+
+jobs:
+  wake_up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Selenium
+        run: |
+          pip install selenium webdriver-manager
+
+      - name: Wake Up Apps
+        run: |
+          python - <<EOF
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          from selenium.webdriver.chrome.service import Service
+          from webdriver_manager.chrome import ChromeDriverManager
+          import time
+
+          # 깨우고 싶은 형님의 앱 URL 리스트
+          apps = [
+              "https://robot_control.streamlit.app/"
+          ]
+
+          chrome_options = Options()
+          chrome_options.add_argument("--headless")
+          chrome_options.add_argument("--no-sandbox")
+          chrome_options.add_argument("--disable-dev-shm-usage")
+
+          driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
+          for app in apps:
+              print(f"Waking up: {app}")
+              try:
+                  driver.get(app)
+                  # 페이지가 로드될 때까지 15초 대기 (Streamlit이 깨어날 시간 부여)
+                  time.sleep(15)
+                  print(f"Successfully touched {app}")
+              except Exception as e:
+                  print(f"Failed to wake {app}: {e}")
+
+          driver.quit()
+          EOF

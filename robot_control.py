@@ -44,7 +44,7 @@ auto_charge = st.sidebar.checkbox("AI 자동 충전 스케줄링 활성화", val
 update_interval = st.sidebar.slider("새로고침 주기 (초)", 1, 10, 5)
 
 # --- 메인 타이틀 (루프 밖) ---
-st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
+st.title("🛰️ Mobility 통합 관제 및 자동 충전 시스템")
 
 # 실시간 갱신을 위한 메인 컨테이너
 main_container = st.empty()

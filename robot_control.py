@@ -3,99 +3,73 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from datetime import datetime
-import io
+import time
 
-# 1. 페이지 설정
-st.set_page_config(page_title="Global Robot C2 Center", layout="wide")
+# 1. 페이지 설정 및 지도 스타일 (Mapbox 토큰이 있다면 더 고해상도 지도가 가능합니다)
+st.set_page_config(page_title="Global Robot C2 - GPS Live", layout="wide")
 
-# --- 데이터 생성 및 전처리 함수 ---
-@st.cache_data
-def get_robot_data():
-    np.random.seed(42)
-    df = pd.DataFrame({
-        'Robot ID': [f"ROBOT-{i:03d}" for i in range(1, 101)],
-        'Status': np.random.choice(['Operating', 'Idle', 'Maintenance'], size=100),
-        'Battery (%)': np.random.randint(20, 100, size=100),
-        'Vibration (mm)': np.random.uniform(0.1, 0.5, size=100),
-        'Failure Risk (%)': np.random.uniform(0, 100, size=100)
-    })
-    return df
+# --- 실전용: 외부 데이터 소스 연동 함수 (예시: API 또는 DB) ---
+# 실제 환경에서는 이곳에 requests.get('API_URL')이나 SQL 쿼리가 들어갑니다.
+def fetch_live_gps_data():
+    # 시연을 위한 실전급 좌표 데이터 (하남 미사, 용산, 마포 등 실제 전략 요충지 기반)
+    data = {
+        'Robot ID': ['ROBOT-H01', 'ROBOT-Y02', 'ROBOT-M03', 'ROBOT-S04', 'ROBOT-G05'],
+        'Latitude': [37.5500, 37.5300, 37.5400, 37.5450, 37.5100],  # 하남, 용산, 마포, 성동, 강남
+        'Longitude': [127.1900, 126.9700, 126.9500, 127.0400, 127.0600],
+        'Status': ['Operating', 'Operating', 'Warning', 'Operating', 'Maintenance'],
+        'Failure Risk (%)': [12, 45, 88, 5, 95],
+        'Battery (%)': [85, 62, 41, 90, 15],
+        'Last Update': [datetime.now().strftime('%H:%M:%S')] * 5
+    }
+    return pd.DataFrame(data)
 
-# --- 사이드바 설정 ---
-st.sidebar.header("🕹️ 관제 설정")
+# --- 사이드바: 실시간 관제 엔진 ---
+st.sidebar.header("📡 실시간 관제 통신")
+live_mode = st.sidebar.toggle("라이브 스트리밍 모드", value=True)
+update_interval = st.sidebar.slider("데이터 갱신 주기 (초)", 1, 10, 3)
 
-# [강화된 기능] 샘플 파일 다운로드 (시연 준비용)
-sample_df = get_robot_data().head(5)
-csv_sample = sample_df.to_csv(index=False).encode('utf-8-sig')
-st.sidebar.download_button("📥 시연용 샘플 양식 다운로드", data=csv_sample, file_name="robot_sample.csv", mime="text/csv")
+# --- 메인 대시보드 ---
+st.title("🛰️ 격오지 로봇 GPS 실시간 관제 (Live)")
 
-uploaded_file = st.sidebar.file_uploader("📂 시연용 CSV 업로드", type=["csv"])
-target_risk = st.sidebar.slider("AI 예지보전 타겟 리스크 (%)", 0, 100, 80)
+# 실시간 갱신 로직 (st.empty를 사용해 화면 깜빡임 없이 데이터만 교체)
+placeholder = st.empty()
 
-# --- 데이터 로드 및 검증 ---
-if uploaded_file is not None:
-    try:
-        raw_df = pd.read_csv(uploaded_file)
-        # 컬럼 이름의 공백 제거 및 대소문자 통일 (에러 방지)
-        raw_df.columns = raw_df.columns.str.strip()
+while live_mode:
+    df = fetch_live_gps_data()
+    
+    with placeholder.container():
+        # KPI 섹션
+        k1, k2, k3 = st.columns(3)
+        k1.metric("활성 로봇", f"{len(df)} 대", "Connected")
+        k2.metric("위험 로봇", f"{len(df[df['Failure Risk (%)'] > 80])} 대", "-1", delta_color="inverse")
+        k3.metric("평균 응답 속도", "42ms", "-5ms")
+
+        # --- 메인 지도: Plotly Scatter Mapbox ---
+        # 실제 지도를 보고 싶으실 때 가장 강력한 시각화 도구입니다.
+        fig = px.scatter_mapbox(
+            df, 
+            lat="Latitude", 
+            lon="Longitude", 
+            color="Status",
+            size="Failure Risk (%)",  # 위험할수록 점이 커짐
+            hover_name="Robot ID",
+            hover_data=["Battery (%)", "Failure Risk (%)", "Last Update"],
+            color_discrete_map={'Operating': '#2ecc71', 'Warning': '#f1c40f', 'Maintenance': '#e74c3c'},
+            zoom=11, 
+            height=600,
+            center={"lat": 37.53, "lon": 127.02} # 서울 중심부 고정
+        )
+
+        # 지도 스타일 설정 (open-street-map은 무료, mapbox-token이 있으면 더 화려해집니다)
+        fig.update_layout(mapbox_style="open-street-map")
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
         
-        # 필수 컬럼 존재 확인
-        required_cols = ['Robot ID', 'Status', 'Battery (%)', 'Vibration (mm)', 'Failure Risk (%)']
-        if all(col in raw_df.columns for col in required_cols):
-            df = raw_df
-            st.sidebar.success("✅ 커스텀 데이터 적용 완료!")
-        else:
-            missing = [c for c in required_cols if c not in raw_df.columns]
-            st.sidebar.error(f"❌ 필수 컬럼 누락: {missing}")
-            df = get_robot_data()
-    except Exception as e:
-        st.sidebar.error(f"❌ 파일 읽기 오류: {e}")
-        df = get_robot_data()
-else:
-    df = get_robot_data()
+        st.plotly_chart(fig, use_container_width=True)
 
-# --- 메인 UI 시작 ---
-st.title("🌐 격오지 AI 로봇 통합 관제 시스템 (v2.1)")
-st.info(f"운영자: 형님(Hyung-nim) | 현재 상태: {'실제 데이터 분석 중' if uploaded_file else '가상 데모 모드'}")
+        # 하단 상세 상태 로그
+        st.subheader("📋 개별 로봇 통신 상태")
+        st.dataframe(df, use_container_width=True)
 
-# KPI 섹션
-st.divider()
-k1, k2, k3, k4 = st.columns(4)
-
-# 에러 방지를 위한 데이터 가공
-danger_mask = df['Failure Risk (%)'] > target_risk
-danger_count = danger_mask.sum()
-
-with k1:
-    acc = (df['Status'] == 'Operating').sum() / len(df) * 100
-    st.metric("📊 가동률", f"{acc:.1f}%")
-with k2:
-    st.metric("💰 절감 기대액", f"₩{(danger_count * 1250000):,}")
-with k3:
-    st.metric("🛠️ 긴급 점검", f"{danger_count} 대")
-with k4:
-    st.metric("🔋 평균 배터리", f"{int(df['Battery (%)'].mean())}%")
-
-# 시각화 섹션
-st.divider()
-c1, c2 = st.columns([2, 1])
-
-with c1:
-    st.subheader("📍 로봇 군집 리스크 맵")
-    fig = px.scatter(df, x='Vibration (mm)', y='Failure Risk (%)', color='Status', size='Battery (%)',
-                     hover_name='Robot ID', color_discrete_map={'Operating': '#2ecc71', 'Idle': '#f1c40f', 'Maintenance': '#e74c3c'})
-    fig.add_hline(y=target_risk, line_dash="dot", line_color="red", annotation_text="Risk Limit")
-    st.plotly_chart(fig, use_container_width=True)
-
-with c2:
-    st.subheader("🚨 AI 실시간 브리핑")
-    danger_robots = df[danger_mask].sort_values('Failure Risk (%)', ascending=False)
-    if not danger_robots.empty:
-        for _, row in danger_robots.head(5).iterrows():
-            st.warning(f"**{row['Robot ID']}** ({row['Failure Risk (%)']:.1f}%)")
-    else:
-        st.success("이상 징후 없음")
-
-# 전체 데이터
-with st.expander("📝 상세 데이터 보기"):
-    st.dataframe(df, use_container_width=True)
+    if not live_mode:
+        break
+    time.sleep(update_interval)

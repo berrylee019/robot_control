@@ -58,7 +58,7 @@ while live_mode:
     st.session_state.count += 1
     
     with main_container.container():
-        st.markdown(f"**운영자:** `형님(Hyung-nim)` | **통신 상태:** `Online` | **업데이트 시각:** `{datetime.now().strftime('%H:%M:%S')}`")
+        st.markdown(f"**운영자:** `MisaTech` | **통신 상태:** `Online` | **업데이트 시각:** `{datetime.now().strftime('%H:%M:%S')}`")
         
         # 1. KPI
         k1, k2, k3, k4 = st.columns(4)

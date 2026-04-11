@@ -44,7 +44,7 @@ auto_charge = st.sidebar.checkbox("AI 자동 충전 스케줄링 활성화", val
 update_interval = st.sidebar.slider("새로고침 주기 (초)", 1, 10, 5)
 
 # --- 메인 타이틀 (루프 밖) ---
-st.title("🛰️ Mobility 통합 관제 및 자동 충전 시스템")
+st.title("🛰️ Beam Mobility 통합 관제 및 자동 충전 시스템")
 
 # 실시간 갱신을 위한 메인 컨테이너
 main_container = st.empty()
@@ -71,7 +71,7 @@ while live_mode:
         k4.metric("시스템 효율", "94%", "+2%")
 
         # 2. 지도 (중복 방지를 위해 key값 부여)
-        st.subheader("📍 전국 로봇 실시간 위치 및 상태")
+        st.subheader("📍 Mobilty 실시간 위치 및 상태")
         fig = px.scatter_mapbox(
             df, lat="Latitude", lon="Longitude", color="Status", size="Failure Risk (%)",
             hover_name="Robot ID", zoom=11, height=500,

@@ -71,7 +71,7 @@ while live_mode:
         k4.metric("시스템 효율", "94%", "+2%")
 
         # 2. 지도 (중복 방지를 위해 key값 부여)
-        st.subheader("📍 Mobilty 실시간 위치 및 상태")
+        st.subheader(" Mobilty 실시간 위치 및 상태")
         fig = px.scatter_mapbox(
             df, lat="Latitude", lon="Longitude", color="Status", size="Failure Risk (%)",
             hover_name="Robot ID", zoom=11, height=500,

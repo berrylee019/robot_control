@@ -11,7 +11,7 @@ st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
 # --- 데이터 엔진 ---
 def fetch_integrated_data():
     data = {
-        'Robot ID': ['ROBOT-H01', 'ROBOT-Y02', 'ROBOT-M03', 'ROBOT-S04', 'ROBOT-G05'],
+        'Robot ID': ['ROBOT-H01', 'ROBOT-Y02', 'T-RAX-01', 'ROBOT-S04', 'ROBOT-G05'],
         'Latitude': [37.5500, 37.5300, 37.5400, 37.5450, 37.5100],
         'Longitude': [127.1900, 126.9700, 126.9500, 127.0400, 127.0600],
         'Status': ['Operating', 'Operating', 'Charging', 'Operating', 'Low Battery'],

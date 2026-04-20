@@ -56,7 +56,7 @@ else:
 
 # --- 메인 UI 시작 ---
 st.title("🌐 격오지 AI 로봇 통합 관제 시스템 (v2.1)")
-st.info(f"운영자: 형님(Hyung-nim) | 현재 상태: {'실제 데이터 분석 중' if uploaded_file else '가상 데모 모드'}")
+st.info(f"운영자: MisaTech | 현재 상태: {'실제 데이터 분석 중' if uploaded_file else '가상 데모 모드'}")
 
 # KPI 섹션
 st.divider()

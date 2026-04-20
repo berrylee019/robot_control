@@ -7,26 +7,29 @@ import time
 import streamlit_analytics2 as streamlit_analytics
 
 
+# 1. 쿼리 파라미터 확인 (?analytics=on 인지 체크)
+query_params = st.query_params
+show_analytics = query_params.get("analytics") == "on"
 
-    # 1. 쿼리 파라미터 확인 (?analytics=on 인지 체크)
-    query_params = st.query_params
-    show_analytics = query_params.get("analytics") == "on"
-    
-    if show_analytics:
-        # 2. 통계 모드일 때만 비밀번호 확인
-        password = st.text_input("관리자 비밀번호를 입력하세요", type="password")
-        if password == "2004":
-            st.write("### 📊 방문자 통계 분석")
-            # 비밀번호가 맞을 때만 데이터 로드 및 표시
-            streamlit_analytics.view() 
-        else:
-            st.warning("비밀번호가 틀렸거나 입력되지 않았습니다.")
+if show_analytics:
+    # 2. 통계 모드일 때 (관리자 전용)
+    password = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+    if password == "2004":
+        st.write("### 📊 방문자 통계 분석")
+        # 관리자 화면에서는 데이터를 수집하지 않고 '보기'만 합니다.
+        streamlit_analytics.view() 
     else:
-        # 3. 일반 사용자용 메인 화면 (데이터 수집은 항상 실행)
-            with streamlit_analytics.track():
-                    # password -> unsafe_password 로 변경
-            with streamlit_analytics.track(unsafe_password="2004"): 
-                st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
+        st.warning("비밀번호를 입력해 주세요.")
+else:
+    # 3. 일반 사용자 모드 (데이터 수집 실행)
+    # 비밀번호 없이 조용히 데이터를 수집하도록 설정합니다.
+    with streamlit_analytics.track(): 
+        # --- 여기서부터 메인 앱 화면 시작 (반드시 들여쓰기 유지!) ---
+        st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
+        
+        # 기존에 짜두신 나머지 관제 시스템 코드들을 
+        # 모두 이 아래에 들여쓰기를 맞춰서 넣어주세요.
+        # 예: st.sidebar.header("설정"), st.write("로봇 상태") 등
     
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")

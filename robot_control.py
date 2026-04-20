@@ -6,9 +6,7 @@ from datetime import datetime, timedelta
 import time
 import streamlit_analytics2 as streamlit_analytics
 
-# password -> unsafe_password 로 변경
-with streamlit_analytics.track(unsafe_password="2004"): 
-    st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
+
 
     # 1. 쿼리 파라미터 확인 (?analytics=on 인지 체크)
     query_params = st.query_params
@@ -26,7 +24,10 @@ with streamlit_analytics.track(unsafe_password="2004"):
     else:
         # 3. 일반 사용자용 메인 화면 (데이터 수집은 항상 실행)
             with streamlit_analytics.track():
-        
+                    # password -> unsafe_password 로 변경
+            with streamlit_analytics.track(unsafe_password="2004"): 
+                st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
+    
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
 

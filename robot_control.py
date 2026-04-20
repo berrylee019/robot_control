@@ -26,7 +26,7 @@ if show_analytics:
         streamlit_analytics.view(save_path="analytics.json")
 else:
     st.warning("비밀번호를 입력해 주세요.")
-else:
+
     # 3. 일반 사용자 모드 (데이터 수집 실행)
     # 비밀번호 없이 조용히 데이터를 수집하도록 설정합니다.
     with streamlit_analytics.track(save_path="analytics.json"): 

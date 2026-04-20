@@ -24,8 +24,8 @@ if show_analytics:
         # 관리자 화면에서는 데이터를 수집하지 않고 '보기'만 합니다.
         # 관제 데이터를 기본값(메모리/파일)에서 읽어오도록 명시합니다.
         streamlit_analytics.view(save_path="analytics.json")
-    else:
-        st.warning("비밀번호를 입력해 주세요.")
+else:
+    st.warning("비밀번호를 입력해 주세요.")
 else:
     # 3. 일반 사용자 모드 (데이터 수집 실행)
     # 비밀번호 없이 조용히 데이터를 수집하도록 설정합니다.

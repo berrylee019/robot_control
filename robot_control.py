@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import time
 import streamlit_analytics2 as streamlit_analytics
 
-# [필수] 1. 페이지 설정은 반드시 최상단에 위치해야 합니다.
+# [필수] 1. 페이지 설정 (가장 상단에 위치)
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
 
 # --- 데이터 엔진 및 함수 정의 ---
@@ -38,24 +38,21 @@ def generate_charging_schedule(df):
         })
     return pd.DataFrame(schedule)
 
-# --- 로직 시작 ---
+# --- 메인 로직 ---
 
 # 1. 쿼리 파라미터 확인 (?analytics=on 인지 체크)
 show_analytics = st.query_params.get("analytics") == "on"
 
 if show_analytics:
-    # [관리자 모드] 통계 화면 표시
-    st.title("📊 방문자 통계 분석 대시보드")
-    password = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+    # [관리자 모드] 비번 없이 바로 통계 출력
+    st.title("📊 실시간 방문자 분석 대시보드")
+    import streamlit_analytics2
+    # 비밀번호 확인 절차 없이 바로 대시보드 호출
+    streamlit_analytics2.main.display_summary(save_path="analytics.json")
     
-    if password == "2004":
-        st.success("인증되었습니다.")
-        from streamlit_analytics2 import main
-        main.display_summary(save_path="analytics.json")
-    elif password == "":
-        st.info("비밀번호를 입력해 주세요.")
-    else:
-        st.error("비밀번호가 틀렸습니다.")
+    if st.button("홈으로 돌아가기"):
+        st.query_params.clear()
+        st.rerun()
 
 else:
     # [일반 사용자 모드] 관제 시스템 실행 및 데이터 수집
@@ -74,7 +71,7 @@ else:
         if 'count' not in st.session_state:
             st.session_state.count = 0
 
-        # 라이브 모드 루프
+        # 실시간 갱신 루프
         if live_mode:
             while True:
                 df = fetch_integrated_data()
@@ -126,7 +123,6 @@ else:
                             st.write("이상 로그 없음")
                 
                 time.sleep(update_interval)
-                # 라이브 모드가 꺼지면 루프 탈출
                 if not live_mode:
                     break
         else:

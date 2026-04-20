@@ -16,8 +16,9 @@ if show_analytics:
     password = st.text_input("관리자 비밀번호를 입력하세요", type="password")
     if password == "2004":
         st.write("### 📊 방문자 통계 분석")
-        # 아래처럼 save_path를 추가해서 호출하세요!
-        streamlit_analytics.display_analytics(save_path="analytics.json") 
+        # 아래 코드는 라이브러리 내부 대시보드를 직접 불러오는 방식입니다.
+        from streamlit_analytics2 import main
+        main.display_summary(save_path="analytics.json")
     else:
         st.warning("비밀번호를 입력해 주세요.")
         st.write("### 📊 방문자 통계 분석")

@@ -10,7 +10,23 @@ import streamlit_analytics2 as streamlit_analytics
 with streamlit_analytics.track(unsafe_password="2004"): 
     st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
 
+# 1. 쿼리 파라미터 확인 (?analytics=on 인지 체크)
+query_params = st.query_params
+show_analytics = query_params.get("analytics") == "on"
 
+if show_analytics:
+    # 2. 통계 모드일 때만 비밀번호 확인
+    password = st.text_input("관리자 비밀번호를 입력하세요", type="password")
+    if password == "2004":
+        st.write("### 📊 방문자 통계 분석")
+        # 비밀번호가 맞을 때만 데이터 로드 및 표시
+        streamlit_analytics.view() 
+    else:
+        st.warning("비밀번호가 틀렸거나 입력되지 않았습니다.")
+else:
+    # 3. 일반 사용자용 메인 화면 (데이터 수집은 항상 실행)
+    with streamlit_analytics.track():
+        
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
 

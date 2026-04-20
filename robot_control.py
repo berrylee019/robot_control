@@ -2,128 +2,100 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from datetime import datetime, timedelta
-import time
-import streamlit_analytics2 as streamlit_analytics
+from datetime import datetime
+import io
 
-# [필수] 1. 페이지 설정 (가장 상단에 위치)
-st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
+# 1. 페이지 설정
+st.set_page_config(page_title="Global Robot C2 Center", layout="wide")
 
-# --- 데이터 엔진 및 함수 정의 ---
-def fetch_integrated_data():
-    data = {
-        'Robot ID': ['ROBOT-H01', 'ROBOT-Y02', 'T-RAX-01', 'ROBOT-S04', 'ROBOT-G05'],
-        'Latitude': [37.5500, 37.5300, 37.5400, 37.5450, 37.5100],
-        'Longitude': [127.1900, 126.9700, 126.9500, 127.0400, 127.0600],
-        'Status': ['Operating', 'Operating', 'Charging', 'Operating', 'Low Battery'],
-        'Failure Risk (%)': [12, 45, 8, 5, 95],
-        'Battery (%)': [85, 62, 15, 90, 12],
-        'Last Update': [datetime.now().strftime('%H:%M:%S')] * 5
-    }
-    return pd.DataFrame(data)
+# --- 데이터 생성 및 전처리 함수 ---
+@st.cache_data
+def get_robot_data():
+    np.random.seed(42)
+    df = pd.DataFrame({
+        'Robot ID': [f"ROBOT-{i:03d}" for i in range(1, 101)],
+        'Status': np.random.choice(['Operating', 'Idle', 'Maintenance'], size=100),
+        'Battery (%)': np.random.randint(20, 100, size=100),
+        'Vibration (mm)': np.random.uniform(0.1, 0.5, size=100),
+        'Failure Risk (%)': np.random.uniform(0, 100, size=100)
+    })
+    return df
 
-def generate_charging_schedule(df):
-    schedule = []
-    low_battery_robots = df[(df['Battery (%)'] < 30) | (df['Status'] == 'Low Battery')]
-    stations = ['강남-Station A', '마포-Station B', '용산-Station C']
-    for i, (idx, row) in enumerate(low_battery_robots.iterrows()):
-        start_time = datetime.now() + timedelta(minutes=15 * (i + 1))
-        schedule.append({
-            'ID': row['Robot ID'],
-            '배터리': f"{row['Battery (%)']}%",
-            '지정 충전소': stations[i % len(stations)],
-            '예약 시각': start_time.strftime('%H:%M'),
-            '예상 소요': "45분",
-            '우선순위': "긴급" if row['Battery (%)'] < 15 else "보통"
-        })
-    return pd.DataFrame(schedule)
+# --- 사이드바 설정 ---
+st.sidebar.header("🕹️ 관제 설정")
 
-# --- 메인 로직 ---
+# [강화된 기능] 샘플 파일 다운로드 (시연 준비용)
+sample_df = get_robot_data().head(5)
+csv_sample = sample_df.to_csv(index=False).encode('utf-8-sig')
+st.sidebar.download_button("📥 시연용 샘플 양식 다운로드", data=csv_sample, file_name="robot_sample.csv", mime="text/csv")
 
-# 1. 쿼리 파라미터 확인 (?analytics=on 인지 체크)
-show_analytics = st.query_params.get("analytics") == "on"
+uploaded_file = st.sidebar.file_uploader("📂 시연용 CSV 업로드", type=["csv"])
+target_risk = st.sidebar.slider("AI 예지보전 타겟 리스크 (%)", 0, 100, 80)
 
-if show_analytics:
-    # [관리자 모드] 비번 없이 바로 통계 출력
-    st.title("📊 실시간 방문자 분석 대시보드")
-    import streamlit_analytics2
-    # 비밀번호 확인 절차 없이 바로 대시보드 호출
-    streamlit_analytics2.main.display_summary(save_path="analytics.json")
-    
-    if st.button("홈으로 돌아가기"):
-        st.query_params.clear()
-        st.rerun()
-
-else:
-    # [일반 사용자 모드] 관제 시스템 실행 및 데이터 수집
-    with streamlit_analytics.track(save_path="analytics.json"):
-        # --- 사이드바 설정 ---
-        st.sidebar.header("📡 시스템 통합 관제")
-        live_mode = st.sidebar.toggle("라이브 스트리밍", value=True)
-        auto_charge = st.sidebar.checkbox("AI 자동 충전 스케줄링 활성화", value=True)
-        update_interval = st.sidebar.slider("새로고침 주기 (초)", 1, 10, 5)
-
-        # --- 메인 화면 구성 ---
-        st.title("🛰️ Mobility 통합 관제 및 자동 충전 시스템")
-        main_container = st.empty()
-
-        # 고유 ID 생성을 위한 세션 상태
-        if 'count' not in st.session_state:
-            st.session_state.count = 0
-
-        # 실시간 갱신 루프
-        if live_mode:
-            while True:
-                df = fetch_integrated_data()
-                st.session_state.count += 1
-                
-                with main_container.container():
-                    st.markdown(f"**운영자:** `MisaTech` | **통신 상태:** `Online` | **업데이트 시각:** `{datetime.now().strftime('%H:%M:%S')}`")
-                    
-                    # 1. KPI 지표
-                    k1, k2, k3, k4 = st.columns(4)
-                    danger_count = (df['Battery (%)'] < 30).sum()
-                    risk_count = (df['Failure Risk (%)'] > 80).sum()
-                    
-                    k1.metric("전체 함대", f"{len(df)}대", "Stable")
-                    k2.metric("긴급 충전 필요", f"{danger_count}대", "-1", delta_color="inverse")
-                    k3.metric("예지보전 대상", f"{risk_count}대", "High Risk")
-                    k4.metric("시스템 효율", "94%", "+2%")
-
-                    # 2. 실시간 지도
-                    st.subheader("📍 Mobility 실시간 위치 및 상태")
-                    fig = px.scatter_mapbox(
-                        df, lat="Latitude", lon="Longitude", color="Status", size="Failure Risk (%)",
-                        hover_name="Robot ID", zoom=11, height=500,
-                        color_discrete_map={'Operating': '#2ecc71', 'Warning': '#f1c40f', 'Maintenance': '#e74c3c', 'Charging': '#3498db', 'Low Battery': '#e67e22'}
-                    )
-                    fig.update_layout(mapbox_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
-                    st.plotly_chart(fig, use_container_width=True, key=f"map_{st.session_state.count}")
-
-                    # 3. 하단 상세 정보
-                    st.divider()
-                    col_sch, col_log = st.columns([2, 1])
-                    
-                    with col_sch:
-                        st.subheader("🔋 AI 자동 충전 예약 현황")
-                        if auto_charge:
-                            sched_df = generate_charging_schedule(df)
-                            if not sched_df.empty:
-                                st.table(sched_df)
-                            else:
-                                st.success("모든 로봇 배터리 양호")
-                    
-                    with col_log:
-                        st.subheader("🚨 시스템 로그")
-                        danger_logs = df[df['Failure Risk (%)'] > 70]
-                        if not danger_logs.empty:
-                            for _, row in danger_logs.iterrows():
-                                st.error(f"**{row['Robot ID']}**: {row['Status']}")
-                        else:
-                            st.write("이상 로그 없음")
-                
-                time.sleep(update_interval)
-                if not live_mode:
-                    break
+# --- 데이터 로드 및 검증 ---
+if uploaded_file is not None:
+    try:
+        raw_df = pd.read_csv(uploaded_file)
+        # 컬럼 이름의 공백 제거 및 대소문자 통일 (에러 방지)
+        raw_df.columns = raw_df.columns.str.strip()
+       
+        # 필수 컬럼 존재 확인
+        required_cols = ['Robot ID', 'Status', 'Battery (%)', 'Vibration (mm)', 'Failure Risk (%)']
+        if all(col in raw_df.columns for col in required_cols):
+            df = raw_df
+            st.sidebar.success("✅ 커스텀 데이터 적용 완료!")
         else:
-            st.info("라이브 스트리밍이 꺼져 있습니다. 사이드바에서 활성화해 주세요.")
+            missing = [c for c in required_cols if c not in raw_df.columns]
+            st.sidebar.error(f"❌ 필수 컬럼 누락: {missing}")
+            df = get_robot_data()
+    except Exception as e:
+        st.sidebar.error(f"❌ 파일 읽기 오류: {e}")
+        df = get_robot_data()
+else:
+    df = get_robot_data()
+
+# --- 메인 UI 시작 ---
+st.title("🌐 격오지 AI 로봇 통합 관제 시스템 (v2.1)")
+st.info(f"운영자: 형님(Hyung-nim) | 현재 상태: {'실제 데이터 분석 중' if uploaded_file else '가상 데모 모드'}")
+
+# KPI 섹션
+st.divider()
+k1, k2, k3, k4 = st.columns(4)
+
+# 에러 방지를 위한 데이터 가공
+danger_mask = df['Failure Risk (%)'] > target_risk
+danger_count = danger_mask.sum()
+
+with k1:
+    acc = (df['Status'] == 'Operating').sum() / len(df) * 100
+    st.metric("📊 가동률", f"{acc:.1f}%")
+with k2:
+    st.metric("💰 절감 기대액", f"₩{(danger_count * 1250000):,}")
+with k3:
+    st.metric("🛠️ 긴급 점검", f"{danger_count} 대")
+with k4:
+    st.metric("🔋 평균 배터리", f"{int(df['Battery (%)'].mean())}%")
+
+# 시각화 섹션
+st.divider()
+c1, c2 = st.columns([2, 1])
+
+with c1:
+    st.subheader("📍 로봇 군집 리스크 맵")
+    fig = px.scatter(df, x='Vibration (mm)', y='Failure Risk (%)', color='Status', size='Battery (%)',
+                     hover_name='Robot ID', color_discrete_map={'Operating': '#2ecc71', 'Idle': '#f1c40f', 'Maintenance': '#e74c3c'})
+    fig.add_hline(y=target_risk, line_dash="dot", line_color="red", annotation_text="Risk Limit")
+    st.plotly_chart(fig, use_container_width=True)
+
+with c2:
+    st.subheader("🚨 AI 실시간 브리핑")
+    danger_robots = df[danger_mask].sort_values('Failure Risk (%)', ascending=False)
+    if not danger_robots.empty:
+        for _, row in danger_robots.head(5).iterrows():
+            st.warning(f"**{row['Robot ID']}** ({row['Failure Risk (%)']:.1f}%)")
+    else:
+        st.success("이상 징후 없음")
+
+# 전체 데이터
+with st.expander("📝 상세 데이터 보기"):
+    st.dataframe(df, use_container_width=True)

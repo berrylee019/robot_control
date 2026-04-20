@@ -15,6 +15,11 @@ if show_analytics:
     # 2. 통계 모드일 때 (관리자 전용)
     password = st.text_input("관리자 비밀번호를 입력하세요", type="password")
     if password == "2004":
+    st.write("### 📊 방문자 통계 분석")
+    # 아래처럼 save_path를 추가해서 호출하세요!
+    streamlit_analytics.view(save_path="analytics.json") 
+    else:
+        st.warning("비밀번호를 입력해 주세요.")
         st.write("### 📊 방문자 통계 분석")
         # 관리자 화면에서는 데이터를 수집하지 않고 '보기'만 합니다.
         # 관제 데이터를 기본값(메모리/파일)에서 읽어오도록 명시합니다.
@@ -24,7 +29,7 @@ if show_analytics:
 else:
     # 3. 일반 사용자 모드 (데이터 수집 실행)
     # 비밀번호 없이 조용히 데이터를 수집하도록 설정합니다.
-    with streamlit_analytics.track(): 
+    with streamlit_analytics.track(save_path="analytics.json"): 
         # --- 여기서부터 메인 앱 화면 시작 (반드시 들여쓰기 유지!) ---
         st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
         

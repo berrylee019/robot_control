@@ -4,6 +4,11 @@ import numpy as np
 import plotly.express as px
 from datetime import datetime, timedelta
 import time
+import streamlit_analytics
+
+# 코드 전체를 wrap 하거나 원하는 부분만 감쌉니다.
+with streamlit_analytics.track():
+    st.title("🛰️ 로봇 통합 관제 시스템")
 
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
@@ -106,5 +111,3 @@ while live_mode:
     if not live_mode:
         break
     time.sleep(update_interval)
-# 앱 하단에 추가
-st.markdown("![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Frobot-control.streamlit.app&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Total+Visitors&edge_flat=false)")

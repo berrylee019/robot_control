@@ -7,7 +7,7 @@ import time
 import streamlit_analytics2 as streamlit_analytics
 
 # password -> unsafe_password 로 변경
-with streamlit_analytics.track(): 
+with streamlit_analytics.track(unsafe_password="2004"): 
     st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
 
 

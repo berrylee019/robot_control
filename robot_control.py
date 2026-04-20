@@ -17,7 +17,7 @@ if show_analytics:
     if password == "2004":
         st.write("### 📊 방문자 통계 분석")
         # 아래처럼 save_path를 추가해서 호출하세요!
-        streamlit_analytics.view(save_path="analytics.json") 
+        streamlit_analytics.display_analytics(save_path="analytics.json") 
     else:
         st.warning("비밀번호를 입력해 주세요.")
         st.write("### 📊 방문자 통계 분석")

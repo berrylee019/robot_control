@@ -33,9 +33,9 @@ uploaded_file = st.sidebar.file_uploader("📂 시연용 CSV 업로드", type=["
 target_risk = st.sidebar.slider("AI 예지보전 타겟 리스크 (%)", 0, 100, 80)
 
 # --- 📬 연락처 섹션 추가 (사이드바 하단) ---
-        st.sidebar.divider()
-        st.sidebar.markdown("### 📞 Contact Info")
-        st.sidebar.info("**문의사항**\n\n[bslee@yahoo.com](mailto:bslee@yahoo.com)")
+st.sidebar.divider()
+st.sidebar.markdown("### 📞 Contact Info")
+st.sidebar.info("**문의사항**\n\n[bslee@yahoo.com](mailto:bslee@yahoo.com)")
 
 # --- 데이터 로드 및 검증 ---
 if uploaded_file is not None:

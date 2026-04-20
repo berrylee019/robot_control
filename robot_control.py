@@ -8,10 +8,7 @@ import streamlit_analytics2 as streamlit_analytics
 
 with streamlit_analytics.track(password="2004"): # 형님만의 비밀번호 설정
     st.title("🛰️ 로봇 통합 관제 시스템")
-    
-# ... 하단 코드는 그대로 사용하셔도 됩니다 ...
-with streamlit_analytics.track():
-    st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
+
 
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")

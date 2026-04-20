@@ -25,7 +25,7 @@ with streamlit_analytics.track(unsafe_password="2004"):
             st.warning("비밀번호가 틀렸거나 입력되지 않았습니다.")
     else:
         # 3. 일반 사용자용 메인 화면 (데이터 수집은 항상 실행)
-with streamlit_analytics.track():
+        with streamlit_analytics.track():
         
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")

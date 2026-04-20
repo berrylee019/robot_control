@@ -4,11 +4,11 @@ import numpy as np
 import plotly.express as px
 from datetime import datetime, timedelta
 import time
-import streamlit_analytics
+import streamlit_analytics2 as streamlit_analytics
 
-# 코드 전체를 wrap 하거나 원하는 부분만 감쌉니다.
+# ... 하단 코드는 그대로 사용하셔도 됩니다 ...
 with streamlit_analytics.track():
-    st.title("🛰️ 로봇 통합 관제 시스템")
+    st.title("🛰️ 로봇 통합 관제 및 자동 충전 시스템")
 
 # 1. 페이지 설정
 st.set_page_config(page_title="Global Robot C2 - Full Ops", layout="wide")
